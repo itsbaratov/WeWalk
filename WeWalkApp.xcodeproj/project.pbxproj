@@ -65,6 +65,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 54A008042EF28E7C0020EF05 /* Build configuration list for PBXNativeTarget "WeWalkApp" */;
 			buildPhases = (
+				E15D712A1864464BACA5DE54 /* Copy Target Symbols */,
 				54A007ED2EF28E7A0020EF05 /* Sources */,
 				54A007EE2EF28E7A0020EF05 /* Frameworks */,
 				54A007EF2EF28E7A0020EF05 /* Resources */,
@@ -143,11 +144,14 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = WeWalkApp/WeWalkApp.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = R2UZ548YTV;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = WeWalkApp/Info.plist;
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "WeWalk needs access to your step count, distance, and calories to track your daily walking progress and grow your virtual trees.";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "WeWalk may write activity data to sync your progress.";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UIMainStoryboardFile = Main;
@@ -175,11 +179,14 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = WeWalkApp/WeWalkApp.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = R2UZ548YTV;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = WeWalkApp/Info.plist;
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "WeWalk needs access to your step count, distance, and calories to track your daily walking progress and grow your virtual trees.";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "WeWalk may write activity data to sync your progress.";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UIMainStoryboardFile = Main;
@@ -240,7 +247,7 @@
 				DEVELOPMENT_TEAM = R2UZ548YTV;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -304,7 +311,7 @@
 				DEVELOPMENT_TEAM = R2UZ548YTV;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;

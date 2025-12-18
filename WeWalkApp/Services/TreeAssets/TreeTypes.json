@@ -1,0 +1,72 @@
+[
+    {
+        "id": "oak",
+        "name": "Oak",
+        "description": "A mighty oak tree, symbol of strength and endurance.",
+        "rarity": "common",
+        "assetPrefix": "tree_oak"
+    },
+    {
+        "id": "maple",
+        "name": "Maple",
+        "description": "Beautiful maple with vibrant autumn colors.",
+        "rarity": "common",
+        "assetPrefix": "tree_maple"
+    },
+    {
+        "id": "pine",
+        "name": "Pine",
+        "description": "An evergreen pine that stays green year-round.",
+        "rarity": "common",
+        "assetPrefix": "tree_pine"
+    },
+    {
+        "id": "cherry",
+        "name": "Cherry Blossom",
+        "description": "Delicate cherry tree with beautiful pink flowers.",
+        "rarity": "uncommon",
+        "assetPrefix": "tree_cherry"
+    },
+    {
+        "id": "willow",
+        "name": "Willow",
+        "description": "Graceful willow with flowing branches.",
+        "rarity": "uncommon",
+        "assetPrefix": "tree_willow"
+    },
+    {
+        "id": "birch",
+        "name": "Birch",
+        "description": "Elegant birch with distinctive white bark.",
+        "rarity": "common",
+        "assetPrefix": "tree_birch"
+    },
+    {
+        "id": "apple",
+        "name": "Apple",
+        "description": "Fruitful apple tree for your garden.",
+        "rarity": "uncommon",
+        "assetPrefix": "tree_apple"
+    },
+    {
+        "id": "palm",
+        "name": "Palm",
+        "description": "Tropical palm bringing vacation vibes.",
+        "rarity": "rare",
+        "assetPrefix": "tree_palm"
+    },
+    {
+        "id": "redwood",
+        "name": "Redwood",
+        "description": "Ancient giant from the California forests.",
+        "rarity": "rare",
+        "assetPrefix": "tree_redwood"
+    },
+    {
+        "id": "bonsai",
+        "name": "Bonsai",
+        "description": "Miniature masterpiece of living art.",
+        "rarity": "legendary",
+        "assetPrefix": "tree_bonsai"
+    }
+]
