@@ -150,16 +150,17 @@ final class HomeViewModel: BaseViewModel {
     
     func loadWeeklyData() async {
         let today = Date()
-        let weekAgo = today.adding(days: -6)
+        // Load 30 days of data for scrollable history
+        let startDate = today.adding(days: -29)
         
         do {
-            let stepsData = try await healthKitService.fetchSteps(for: weekAgo...today)
+            let stepsData = try await healthKitService.fetchSteps(for: startDate...today)
             
             await MainActor.run {
                 var days: [WeeklyStepData.DayStepData] = []
                 
-                for dayOffset in 0..<7 {
-                    let date = weekAgo.adding(days: dayOffset)
+                for dayOffset in 0..<30 {
+                    let date = startDate.adding(days: dayOffset)
                     let dayStart = date.startOfDay
                     let daySteps = stepsData[dayStart] ?? 0
                     let goalProgress = Double(daySteps) / Double(self.dailyGoal)
@@ -180,6 +181,7 @@ final class HomeViewModel: BaseViewModel {
             }
         }
     }
+
     
     private func startObservingSteps() {
         healthKitService.startObservingSteps { [weak self] steps in

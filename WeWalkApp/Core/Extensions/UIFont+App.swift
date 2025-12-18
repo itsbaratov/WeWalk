@@ -54,7 +54,7 @@ extension UIFont {
     static let appLabelMedium = UIFont.systemFont(ofSize: 14, weight: .medium)
     
     /// Chart labels - 11pt medium
-    static let appChartLabel = UIFont.systemFont(ofSize: 11, weight: .medium)
+    static let appChartLabel = UIFont.systemFont(ofSize: 14, weight: .medium)
     
     // MARK: - Tab Bar
     
