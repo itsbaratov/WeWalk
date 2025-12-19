@@ -145,7 +145,16 @@ extension SettingsViewController: UITableViewDataSource {
 
 // MARK: - UITableViewDelegate
 
-extension SettingsViewController: UITableViewDelegate {
+extension SettingsViewController: UITableViewDelegate, StepGoalPickerDelegate {
+    
+    func didUpdateDailyGoal(_ newGoal: Int) {
+        // Find the goal cell and reload it
+        if let index = Section.allCases.firstIndex(of: .goal) {
+            let indexPath = IndexPath(row: 0, section: index)
+            tableView.reloadRows(at: [indexPath], with: .automatic)
+        }
+    }
+    
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
         
@@ -153,6 +162,12 @@ extension SettingsViewController: UITableViewDelegate {
         case .appearance:
             let theme = AppTheme.allCases[indexPath.row]
             themeManager.setTheme(theme)
+            
+        case .goal:
+            let currentGoal = UserDefaults.standard.integer(forKey: "dailyGoal")
+            let picker = StepGoalPickerViewController(currentGoal: currentGoal > 0 ? currentGoal : 10000)
+            picker.delegate = self
+            present(picker, animated: true)
             
         case .data:
             if indexPath.row == 1 {

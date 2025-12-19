@@ -2,6 +2,10 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>We need access to update your health data to track your progress.</string>
+	<key>NSMotionUsageDescription</key>
+	<string>We need access to motion data to provide live step counting updates.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
@@ -13,6 +17,7 @@
 				<dict>
 					<key>UISceneConfigurationName</key>
 					<string>Default Configuration</string>
+
 					<key>UISceneDelegateClassName</key>
 					<string>$(PRODUCT_MODULE_NAME).SceneDelegate</string>
 				</dict>

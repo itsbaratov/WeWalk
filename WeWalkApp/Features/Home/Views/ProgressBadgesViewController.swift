@@ -16,42 +16,47 @@ final class ProgressBadgesViewController: UIViewController {
     
     // MARK: - UI Elements
     
-    private let scrollView: UIScrollView = {
-        let sv = UIScrollView()
-        sv.translatesAutoresizingMaskIntoConstraints = false
-        return sv
-    }()
-    
-    private let contentStack: UIStackView = {
-        let stack = UIStackView()
-        stack.axis = .vertical
-        stack.spacing = 24
-        stack.translatesAutoresizingMaskIntoConstraints = false
-        return stack
-    }()
-    
-    private let streakCard: UIView = {
+    // Header section with streak info (no background, clean design)
+    private let headerContainer: UIView = {
         let view = UIView()
-        view.backgroundColor = .appPrimaryGreen
-        view.layer.cornerRadius = 16
+        view.backgroundColor = .systemBackground
         view.translatesAutoresizingMaskIntoConstraints = false
         return view
     }()
     
+    private let boltIcon: UIImageView = {
+        let iv = UIImageView()
+        iv.image = UIImage(systemName: "bolt.fill")
+        iv.tintColor = .secondaryLabel
+        iv.contentMode = .scaleAspectFit
+        iv.translatesAutoresizingMaskIntoConstraints = false
+        return iv
+    }()
+    
     private let streakNumberLabel: UILabel = {
         let label = UILabel()
-        label.font = .appDisplayLarge
-        label.textColor = .appTextOnDark
+        label.font = .systemFont(ofSize: 28, weight: .bold)
+        label.textColor = .secondaryLabel
         label.textAlignment = .center
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
     
-    private let streakTitleLabel: UILabel = {
+    private let daysLabel: UILabel = {
         let label = UILabel()
-        label.text = "Day Streak"
-        label.font = .appTitleMedium
-        label.textColor = .appSecondaryTextOnDark
+        label.text = "days"
+        label.font = .systemFont(ofSize: 28, weight: .semibold)
+        label.textColor = .secondaryLabel
+        label.textAlignment = .center
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+    
+    private let subtitleLabel: UILabel = {
+        let label = UILabel()
+        label.text = "of hitting step goal"
+        label.font = .systemFont(ofSize: 14, weight: .medium)
+        label.textColor = .tertiaryLabel
         label.textAlignment = .center
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
@@ -69,11 +74,13 @@ final class ProgressBadgesViewController: UIViewController {
     private let badgesCollectionView: UICollectionView = {
         let layout = UICollectionViewFlowLayout()
         layout.scrollDirection = .vertical
-        layout.minimumInteritemSpacing = 16
+        layout.minimumInteritemSpacing = 12
         layout.minimumLineSpacing = 16
+        layout.sectionInset = UIEdgeInsets(top: 8, left: 16, bottom: 32, right: 16)
         
         let cv = UICollectionView(frame: .zero, collectionViewLayout: layout)
         cv.backgroundColor = .clear
+        cv.alwaysBounceVertical = true
         cv.translatesAutoresizingMaskIntoConstraints = false
         return cv
     }()
@@ -98,39 +105,49 @@ final class ProgressBadgesViewController: UIViewController {
             action: #selector(dismissModal)
         )
         
-        view.addSubview(scrollView)
-        scrollView.addSubview(contentStack)
+        // Add subviews
+        view.addSubview(headerContainer)
+        headerContainer.addSubview(boltIcon)
+        headerContainer.addSubview(streakNumberLabel)
+        headerContainer.addSubview(daysLabel)
+        headerContainer.addSubview(subtitleLabel)
         
-        // Streak card
-        streakCard.addSubview(streakNumberLabel)
-        streakCard.addSubview(streakTitleLabel)
-        contentStack.addArrangedSubview(streakCard)
-        
-        // Badges
-        contentStack.addArrangedSubview(badgesHeaderLabel)
-        contentStack.addArrangedSubview(badgesCollectionView)
+        view.addSubview(badgesHeaderLabel)
+        view.addSubview(badgesCollectionView)
         
         NSLayoutConstraint.activate([
-            scrollView.topAnchor.constraint(equalTo: view.topAnchor),
-            scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            scrollView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            // Header container - fixed at top
+            headerContainer.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            headerContainer.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            headerContainer.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             
-            contentStack.topAnchor.constraint(equalTo: scrollView.topAnchor, constant: 24),
-            contentStack.leadingAnchor.constraint(equalTo: scrollView.leadingAnchor, constant: 16),
-            contentStack.trailingAnchor.constraint(equalTo: scrollView.trailingAnchor, constant: -16),
-            contentStack.bottomAnchor.constraint(equalTo: scrollView.bottomAnchor, constant: -24),
-            contentStack.widthAnchor.constraint(equalTo: scrollView.widthAnchor, constant: -32),
+            // Bolt icon
+            boltIcon.topAnchor.constraint(equalTo: headerContainer.topAnchor, constant: 24),
+            boltIcon.centerXAnchor.constraint(equalTo: headerContainer.centerXAnchor),
+            boltIcon.widthAnchor.constraint(equalToConstant: 48),
+            boltIcon.heightAnchor.constraint(equalToConstant: 48),
             
-            streakCard.heightAnchor.constraint(equalToConstant: 120),
+            // Number + "days" on same line
+            streakNumberLabel.topAnchor.constraint(equalTo: boltIcon.bottomAnchor, constant: 8),
+            streakNumberLabel.centerXAnchor.constraint(equalTo: headerContainer.centerXAnchor, constant: -30),
             
-            streakNumberLabel.centerXAnchor.constraint(equalTo: streakCard.centerXAnchor),
-            streakNumberLabel.centerYAnchor.constraint(equalTo: streakCard.centerYAnchor, constant: -8),
+            daysLabel.firstBaselineAnchor.constraint(equalTo: streakNumberLabel.firstBaselineAnchor),
+            daysLabel.leadingAnchor.constraint(equalTo: streakNumberLabel.trailingAnchor, constant: 4),
             
-            streakTitleLabel.topAnchor.constraint(equalTo: streakNumberLabel.bottomAnchor),
-            streakTitleLabel.centerXAnchor.constraint(equalTo: streakCard.centerXAnchor),
+            // Subtitle
+            subtitleLabel.topAnchor.constraint(equalTo: streakNumberLabel.bottomAnchor, constant: 8),
+            subtitleLabel.centerXAnchor.constraint(equalTo: headerContainer.centerXAnchor),
+            subtitleLabel.bottomAnchor.constraint(equalTo: headerContainer.bottomAnchor, constant: -24),
             
-            badgesCollectionView.heightAnchor.constraint(equalToConstant: 400)
+            // Badges header
+            badgesHeaderLabel.topAnchor.constraint(equalTo: headerContainer.bottomAnchor, constant: 24),
+            badgesHeaderLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
+            
+            // Collection view - fills remaining space to bottom
+            badgesCollectionView.topAnchor.constraint(equalTo: badgesHeaderLabel.bottomAnchor, constant: 12),
+            badgesCollectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            badgesCollectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            badgesCollectionView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ])
         
         badgesCollectionView.dataSource = self
@@ -140,7 +157,43 @@ final class ProgressBadgesViewController: UIViewController {
     
     private func loadData() {
         let streakData = streakService.currentStreak.value
-        streakNumberLabel.text = "\(streakData.currentStreak)"
+        let currentStreak = streakData.currentStreak
+        streakNumberLabel.text = "\(currentStreak)"
+        
+        // Apply active styling when streak >= 1
+        if currentStreak >= 1 {
+            applyActiveStyle()
+            startPulseAnimation()
+        } else {
+            applyInactiveStyle()
+        }
+    }
+    
+    private func applyActiveStyle() {
+        boltIcon.tintColor = .appMintGreen
+        streakNumberLabel.textColor = .appMintGreen
+        daysLabel.textColor = .appMintGreen
+        subtitleLabel.textColor = .appMintGreen
+    }
+    
+    private func applyInactiveStyle() {
+        boltIcon.tintColor = .secondaryLabel
+        streakNumberLabel.textColor = .secondaryLabel
+        daysLabel.textColor = .secondaryLabel
+        subtitleLabel.textColor = .tertiaryLabel
+    }
+    
+    private func startPulseAnimation() {
+        // Subtle pulsating animation on the bolt icon
+        let pulseAnimation = CABasicAnimation(keyPath: "transform.scale")
+        pulseAnimation.duration = 1.0
+        pulseAnimation.fromValue = 1.0
+        pulseAnimation.toValue = 1.15
+        pulseAnimation.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+        pulseAnimation.autoreverses = true
+        pulseAnimation.repeatCount = .infinity
+        
+        boltIcon.layer.add(pulseAnimation, forKey: "pulse")
     }
     
     @objc private func dismissModal() {
@@ -172,8 +225,8 @@ extension ProgressBadgesViewController: UICollectionViewDataSource {
 
 extension ProgressBadgesViewController: UICollectionViewDelegateFlowLayout {
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        let width = (collectionView.bounds.width - 32) / 3
-        return CGSize(width: width, height: width + 30)
+        let width = (collectionView.bounds.width - 56) / 3
+        return CGSize(width: width, height: width + 40)
     }
 }
 
@@ -192,7 +245,7 @@ private class BadgeCell: UICollectionViewCell {
     
     private let dayLabel: UILabel = {
         let label = UILabel()
-        label.font = .appLabelBold
+        label.font = .systemFont(ofSize: 18, weight: .bold)
         label.textAlignment = .center
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
@@ -200,7 +253,7 @@ private class BadgeCell: UICollectionViewCell {
     
     private let nameLabel: UILabel = {
         let label = UILabel()
-        label.font = .appCaptionSmall
+        label.font = .systemFont(ofSize: 13, weight: .medium)
         label.textAlignment = .center
         label.numberOfLines = 2
         label.translatesAutoresizingMaskIntoConstraints = false
@@ -225,15 +278,15 @@ private class BadgeCell: UICollectionViewCell {
         contentView.addSubview(nameLabel)
         
         NSLayoutConstraint.activate([
-            iconView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 12),
+            iconView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 16),
             iconView.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
-            iconView.widthAnchor.constraint(equalToConstant: 40),
-            iconView.heightAnchor.constraint(equalToConstant: 40),
+            iconView.widthAnchor.constraint(equalToConstant: 36),
+            iconView.heightAnchor.constraint(equalToConstant: 36),
             
-            dayLabel.topAnchor.constraint(equalTo: iconView.bottomAnchor, constant: 4),
+            dayLabel.topAnchor.constraint(equalTo: iconView.bottomAnchor, constant: 8),
             dayLabel.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
             
-            nameLabel.topAnchor.constraint(equalTo: dayLabel.bottomAnchor, constant: 2),
+            nameLabel.topAnchor.constraint(equalTo: dayLabel.bottomAnchor, constant: 4),
             nameLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 4),
             nameLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -4)
         ])
@@ -246,7 +299,7 @@ private class BadgeCell: UICollectionViewCell {
         if isUnlocked {
             contentView.backgroundColor = .appMintGreen.withAlphaComponent(0.2)
             contentView.layer.borderColor = UIColor.appMintGreen.cgColor
-            iconView.image = UIImage(systemName: "flame.fill")
+            iconView.image = UIImage(systemName: "bolt.fill")
             iconView.tintColor = .appMintGreen
             dayLabel.textColor = .appPrimaryGreen
             nameLabel.textColor = .label

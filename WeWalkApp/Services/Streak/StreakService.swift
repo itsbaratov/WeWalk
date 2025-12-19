@@ -52,6 +52,19 @@ final class StreakService: StreakServiceProtocol {
     
     private init() {
         loadStreak()
+        
+        // Fix for "Midnight Bug": Re-check streak when system date changes
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleDayChange),
+            name: .NSCalendarDayChanged,
+            object: nil
+        )
+    }
+    
+    @objc private func handleDayChange() {
+        print("[StreakService] Day changed - re-checking streak status")
+        checkAndRecoverStreak()
     }
     
     // MARK: - Streak Management

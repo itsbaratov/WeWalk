@@ -42,8 +42,8 @@ struct WeeklyStepData {
     struct DayStepData: Identifiable {
         let id = UUID()
         let date: Date
-        let steps: Int
-        let goalProgress: Double  // 0.0 to 1.0+
+        var steps: Int
+        var goalProgress: Double  // 0.0 to 1.0+
         
         var dayLabel: String {
             date.weekdayShort

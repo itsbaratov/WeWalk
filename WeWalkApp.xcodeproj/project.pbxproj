@@ -65,7 +65,6 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 54A008042EF28E7C0020EF05 /* Build configuration list for PBXNativeTarget "WeWalkApp" */;
 			buildPhases = (
-				E15D712A1864464BACA5DE54 /* Copy Target Symbols */,
 				54A007ED2EF28E7A0020EF05 /* Sources */,
 				54A007EE2EF28E7A0020EF05 /* Frameworks */,
 				54A007EF2EF28E7A0020EF05 /* Resources */,

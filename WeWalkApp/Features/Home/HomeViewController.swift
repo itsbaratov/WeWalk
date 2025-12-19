@@ -55,7 +55,8 @@ final class HomeViewController: UIViewController {
     
     private let streakIconView: UIImageView = {
         let imageView = UIImageView()
-        imageView.image = UIImage(systemName: "flame.fill")
+        let config = UIImage.SymbolConfiguration(weight: .bold)
+        imageView.image = UIImage(systemName: "bolt.fill", withConfiguration: config)
         imageView.tintColor = .appMintGreen
         imageView.contentMode = .scaleAspectFit
         imageView.translatesAutoresizingMaskIntoConstraints = false
@@ -65,7 +66,7 @@ final class HomeViewController: UIViewController {
     private let streakCountLabel: UILabel = {
         let label = UILabel()
         label.text = "0"
-        label.font = .appLabelBold
+        label.font = .systemFont(ofSize: 16, weight: .bold)
         label.textColor = .appTextOnDark
         label.translatesAutoresizingMaskIntoConstraints = false
         return label

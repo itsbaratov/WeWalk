@@ -20,7 +20,7 @@ protocol HealthKitServiceProtocol {
     func fetchTodayCalories() async throws -> Double
     func fetchSteps(for dateRange: ClosedRange<Date>) async throws -> [Date: Int]
     func fetchHourlySteps(for date: Date) async throws -> [Int: Int]
-    func startObservingSteps(handler: @escaping (Int) -> Void)
+    func startObservingSteps(handler: @escaping (Int, Double, Double) -> Void)
     func stopObservingSteps()
 }
 
@@ -221,7 +221,7 @@ final class HealthKitService: HealthKitServiceProtocol {
     
     // MARK: - Observation
     
-    func startObservingSteps(handler: @escaping (Int) -> Void) {
+    func startObservingSteps(handler: @escaping (Int, Double, Double) -> Void) {
         print("[HealthKit] Starting step observation...")
         
         let query = HKObserverQuery(sampleType: stepType, predicate: nil) { [weak self] _, _, error in
@@ -233,8 +233,11 @@ final class HealthKitService: HealthKitServiceProtocol {
             Task {
                 do {
                     let steps = try await self?.fetchTodaySteps() ?? 0
+                    let distance = try await self?.fetchTodayDistance() ?? 0.0
+                    let calories = try await self?.fetchTodayCalories() ?? 0.0
+                    
                     await MainActor.run {
-                        handler(steps)
+                        handler(steps, distance, calories)
                     }
                 } catch {
                     print("[HealthKit] Error fetching steps in observer: \(error)")

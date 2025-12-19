@@ -131,3 +131,7 @@ enum AppConstants {
         static let refreshInterval: TimeInterval = 60
     }
 }
+
+extension Notification.Name {
+    static let dailyGoalChanged = Notification.Name("dailyGoalChanged")
+}

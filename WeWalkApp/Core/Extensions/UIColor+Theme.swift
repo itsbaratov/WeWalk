@@ -41,7 +41,9 @@ extension UIColor {
     // MARK: - Accent Colors (same in both modes - bright accents)
     
     /// Mint green for progress/success - #9FD8B7
-    static let appMintGreen = UIColor(hex: "#9FD8B7")
+    static let appMintGreen = UIColor(hex: "#9FD8B7") //0A5C36
+    
+    static let appGreenStreak = UIColor(hex: "#0A5C36")
     
     /// Lighter mint for highlights - #B8E5C9
     static let appLightMint = UIColor(hex: "#B8E5C9")

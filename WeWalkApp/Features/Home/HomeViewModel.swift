@@ -37,6 +37,14 @@ final class HomeViewModel: BaseViewModel {
     private let treeGrowthService: TreeGrowthServiceProtocol
     private let streakService: StreakServiceProtocol
     private let treeRegistry: TreeAssetRegistry
+    private let pedometerService: PedometerServiceProtocol
+    
+    private var healthKitSteps: Int = 0
+    private var healthKitDistance: Double = 0
+    private var healthKitCalories: Double = 0
+    
+    private var pedometerSteps: Int = 0
+    private var pedometerDistance: Double = 0
     
     // MARK: - Init
     
@@ -44,12 +52,14 @@ final class HomeViewModel: BaseViewModel {
         healthKitService: HealthKitServiceProtocol = HealthKitService(),
         treeGrowthService: TreeGrowthServiceProtocol = TreeGrowthService.shared,
         streakService: StreakServiceProtocol = StreakService.shared,
-        treeRegistry: TreeAssetRegistry = .shared
+        treeRegistry: TreeAssetRegistry = .shared,
+        pedometerService: PedometerServiceProtocol = PedometerService()
     ) {
         self.healthKitService = healthKitService
         self.treeGrowthService = treeGrowthService
         self.streakService = streakService
         self.treeRegistry = treeRegistry
+        self.pedometerService = pedometerService
         
         super.init()
         
@@ -75,6 +85,20 @@ final class HomeViewModel: BaseViewModel {
             .receive(on: DispatchQueue.main)
             .map(\.currentStreak)
             .assign(to: &$streakCount)
+            
+        // Observe daily goal changes from settings/onboarding
+        NotificationCenter.default.publisher(for: .dailyGoalChanged)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] notification in
+                if let newGoal = notification.userInfo?["goal"] as? Int {
+                    self?.updateDailyGoal(newGoal)
+                } else {
+                    // Fallback reload if no user info
+                    self?.loadDailyGoal()
+                    self?.updateDailyGoal(self?.dailyGoal ?? 10000)
+                }
+            }
+            .store(in: &cancellables)
     }
     
     // MARK: - Data Loading
@@ -125,10 +149,11 @@ final class HomeViewModel: BaseViewModel {
             print("[HomeViewModel] Fetched - Steps: \(fetchedSteps), Distance: \(fetchedDistance), Calories: \(fetchedCalories)")
             
             await MainActor.run {
-                self.steps = fetchedSteps
-                self.distance = fetchedDistance
-                self.calories = fetchedCalories
-                self.progress = Double(fetchedSteps) / Double(self.dailyGoal)
+                self.healthKitSteps = fetchedSteps
+                self.healthKitDistance = fetchedDistance
+                self.healthKitCalories = fetchedCalories
+                
+                self.updateMetrics()
                 self.isLoading = false
                 
                 // Update tree growth
@@ -184,15 +209,74 @@ final class HomeViewModel: BaseViewModel {
 
     
     private func startObservingSteps() {
-        healthKitService.startObservingSteps { [weak self] steps in
+        // 1. Observe HealthKit (Background/Historical sync)
+        healthKitService.startObservingSteps { [weak self] hkSteps, hkDistance, hkCalories in
             guard let self = self else { return }
-            self.steps = steps
-            self.progress = Double(steps) / Double(self.dailyGoal)
-            self.treeGrowthService.updateTreeProgress(steps: steps, goal: self.dailyGoal)
+            self.healthKitSteps = hkSteps
+            self.healthKitDistance = hkDistance
+            self.healthKitCalories = hkCalories
             
-            if self.progress >= 1.0 {
-                self.streakService.updateStreak(for: Date(), goalMet: true)
+            self.updateMetrics()
+        }
+        
+        // 2. Start Pedometer Updates (Live)
+        if pedometerService.isPedometerAvailable {
+            pedometerService.startPedometerUpdates(from: Calendar.current.startOfDay(for: Date())) { [weak self] liveSteps, liveDistance in
+                guard let self = self else { return }
+                DispatchQueue.main.async {
+                    self.pedometerSteps = liveSteps
+                    self.pedometerDistance = liveDistance
+                    self.updateMetrics()
+                }
             }
+        }
+    }
+    
+    private func updateMetrics() {
+        let newSteps = max(self.healthKitSteps, self.pedometerSteps)
+        let newDistance = max(self.healthKitDistance, self.pedometerDistance)
+        // Pedometer doesn't give calories well, trust HealthKit but maybe scale it if needed?
+        // For now, just use HealthKit calories as base. If local steps > HK steps, we could project, but let's stick to simple HK calories for safety.
+        let newCalories = self.healthKitCalories
+        
+        // Update published properties if changed
+        if newDistance != self.distance { self.distance = newDistance }
+        if newCalories != self.calories { self.calories = newCalories }
+        
+        updateSteps(newSteps)
+    }
+    
+    private func updateSteps(_ newTotal: Int) {
+        // Only update if increased or significant change to avoid jitter
+        guard newTotal != self.steps else { return }
+        
+        self.steps = newTotal
+        self.progress = Double(newTotal) / Double(self.dailyGoal)
+        self.treeGrowthService.updateTreeProgress(steps: newTotal, goal: self.dailyGoal)
+        
+        // Update Chart
+        self.updateWeeklyData(with: newTotal)
+        
+        if self.progress >= 1.0 {
+            self.streakService.updateStreak(for: Date(), goalMet: true)
+        }
+    }
+    
+    private func updateWeeklyData(with todaySteps: Int) {
+        guard !weeklyData.isEmpty else { return }
+        
+        // Provided weeklyData is sorted by date, last one should be today
+        // But let's find today safely
+        let today = Date().startOfDay
+        
+        if let index = weeklyData.firstIndex(where: { $0.date.startOfDay == today }) {
+            var updatedDay = weeklyData[index]
+            updatedDay.steps = todaySteps
+            updatedDay.goalProgress = Double(todaySteps) / Double(dailyGoal)
+            weeklyData[index] = updatedDay
+        } else {
+            // Today might be missing if we just crossed day boundary or initialized funny
+            // For now, assume it's there or will be reloaded by loadWeeklyData
         }
     }
     
