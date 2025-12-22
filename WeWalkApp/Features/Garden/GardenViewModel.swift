@@ -2,7 +2,7 @@
 //  GardenViewModel.swift
 //  WeWalkApp
 //
-//  ViewModel for Garden screen
+//  ViewModel for Garden screen with grid-based tree placement
 //
 
 import UIKit
@@ -16,6 +16,8 @@ final class GardenViewModel: BaseViewModel {
     @Published var readyToPlantTrees: [ReadyTreeData] = []
     @Published var currentGardenTreeCount: Int = 0
     @Published var gardenStatus: GardenStatus = .active
+    @Published var hasArchivedGardens: Bool = false
+    @Published private(set) var gardenGrid: GardenGrid = GardenGrid()
     
     // MARK: - Services
     
@@ -32,36 +34,77 @@ final class GardenViewModel: BaseViewModel {
         self.treeRegistry = treeRegistry
         super.init()
         loadMockData()
+        checkForArchivedGardens()
     }
     
     // MARK: - Data Loading
     
     private func loadMockData() {
-        // For now, create some mock planted trees
-        plantedTrees = [
-            PlantedTreeData(id: UUID(), treeTypeId: "oak", position: CGPoint(x: 100, y: 150)),
-            PlantedTreeData(id: UUID(), treeTypeId: "oak", position: CGPoint(x: 250, y: 200)),
-            PlantedTreeData(id: UUID(), treeTypeId: "oak", position: CGPoint(x: 180, y: 320)),
+        // Load existing planted trees and mark their slots as occupied
+        // For demo, plant 3 trees at fixed positions
+        let mockTrees = [
+            (row: 0, col: 2),
+            (row: 1, col: 3),
+            (row: 2, col: 1)
         ]
-        currentGardenTreeCount = plantedTrees.count
-    }
-    
-    // MARK: - Actions
-    
-    func plantTree(at position: CGPoint, treeTypeId: String) {
-        let newTree = PlantedTreeData(id: UUID(), treeTypeId: treeTypeId, position: position)
-        plantedTrees.append(newTree)
-        currentGardenTreeCount = plantedTrees.count
         
-        // Check if garden is complete
-        if currentGardenTreeCount >= AppConstants.Garden.maxCapacity {
-            gardenStatus = .complete
+        for (row, col) in mockTrees {
+            let treeId = UUID()
+            gardenGrid.occupySlot(row: row, col: col, treeId: treeId, treeTypeId: "oak")
+            
+            if let slot = gardenGrid.slot(at: row, col: col) {
+                plantedTrees.append(PlantedTreeData(
+                    id: treeId,
+                    treeTypeId: "oak",
+                    position: slot.position,
+                    row: row,
+                    col: col
+                ))
+            }
         }
         
-        // Remove from ready to plant
-        readyToPlantTrees.removeAll { $0.treeTypeId == treeTypeId }
+        currentGardenTreeCount = plantedTrees.count
     }
     
+    private func checkForArchivedGardens() {
+        // TODO: Check actual data source for archived gardens
+        // For now, set to false
+        hasArchivedGardens = false
+    }
+    
+    // MARK: - Tree Planting
+    
+    /// Plant a tree at a specific grid slot
+    func plantTree(at slot: PlacementSlot, treeData: ReadyTreeData) {
+        guard !gardenGrid.isFull else { return }
+        
+        let treeId = UUID()
+        let treeTypeId = treeData.treeTypeId
+        
+        // Update grid
+        gardenGrid.occupySlot(row: slot.row, col: slot.col, treeId: treeId, treeTypeId: treeTypeId)
+        
+        // Add to planted trees
+        let plantedTree = PlantedTreeData(
+            id: treeId,
+            treeTypeId: treeTypeId,
+            position: slot.position,
+            row: slot.row,
+            col: slot.col
+        )
+        plantedTrees.append(plantedTree)
+        currentGardenTreeCount = plantedTrees.count
+        
+        // Remove from ready to plant
+        readyToPlantTrees.removeAll { $0.id == treeData.id }
+        
+        // Check if garden is complete
+        if gardenGrid.isFull {
+            gardenStatus = .complete
+        }
+    }
+    
+    /// Check for trees that are ready to plant (reached adult stage)
     func checkForReadyTrees() {
         if let state = treeGrowthService.currentGrowingTree.value,
            state.isReadyToPlant {
@@ -76,8 +119,14 @@ final class GardenViewModel: BaseViewModel {
         }
     }
     
+    /// Get tree image for a tree type
     func getTreeImage(for treeTypeId: String) -> UIImage? {
         treeRegistry.treeType(byId: treeTypeId)?.image(for: .adult)
+    }
+    
+    /// Get the current garden grid
+    func getGrid() -> GardenGrid {
+        return gardenGrid
     }
 }
 
@@ -87,6 +136,8 @@ struct PlantedTreeData: Identifiable {
     let id: UUID
     let treeTypeId: String
     let position: CGPoint
+    let row: Int
+    let col: Int
 }
 
 struct ReadyTreeData: Identifiable {

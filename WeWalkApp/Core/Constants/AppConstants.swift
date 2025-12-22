@@ -40,17 +40,28 @@ enum AppConstants {
         /// Maximum trees in one garden
         static let maxCapacity: Int = 30
         
-        /// Garden canvas dimensions
-        static let canvasWidth: CGFloat = 1200
-        static let canvasHeight: CGFloat = 800
+        /// Grid dimensions (6 columns × 5 rows = 30 slots)
+        static let gridRows: Int = 5
+        static let gridCols: Int = 6
+        
+        /// Isometric tile dimensions
+        static let tileWidth: CGFloat = 140
+        static let tileHeight: CGFloat = 70
+        
+        /// Canvas size (matches ground image)
+        static let canvasSize: CGFloat = 1024
+        
+        /// Grass surface positioning
+        static let grassCenterX: CGFloat = 512
+        static let grassStartY: CGFloat = 180
         
         /// Zoom levels
         static let minZoomScale: CGFloat = 0.5
         static let maxZoomScale: CGFloat = 2.0
         static let defaultZoomScale: CGFloat = 1.0
         
-        /// Tree placement grid (optional snap)
-        static let gridSize: CGFloat = 50
+        /// Tree image size on canvas
+        static let treeSize: CGFloat = 80
     }
     
     // MARK: - Streak Badges
