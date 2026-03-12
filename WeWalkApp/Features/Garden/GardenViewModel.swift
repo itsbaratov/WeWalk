@@ -43,9 +43,9 @@ final class GardenViewModel: BaseViewModel {
         // Load existing planted trees and mark their slots as occupied
         // For demo, plant 3 trees at fixed positions
         let mockTrees = [
-            (row: 0, col: 2),
+            (row: 2, col: 2),
             (row: 1, col: 3),
-            (row: 2, col: 1)
+            (row: 3, col: 1)
         ]
         
         for (row, col) in mockTrees {

@@ -22,8 +22,14 @@ final class DraggableTreeCardView: UIView {
     
     private let containerView: UIView = {
         let view = UIView()
-        view.backgroundColor = .systemGray6
+        view.backgroundColor = UIColor.appPrimaryGreen.withAlphaComponent(0.08)
         view.layer.cornerRadius = 12
+        view.layer.borderWidth = 1
+        view.layer.borderColor = UIColor.appMintGreen.withAlphaComponent(0.3).cgColor
+        view.layer.shadowColor = UIColor.black.cgColor
+        view.layer.shadowOffset = CGSize(width: 0, height: 2)
+        view.layer.shadowRadius = 6
+        view.layer.shadowOpacity = 0.08
         view.translatesAutoresizingMaskIntoConstraints = false
         return view
     }()
@@ -119,6 +125,16 @@ final class DraggableTreeCardView: UIView {
         switch gesture.state {
         case .began:
             isDragging = true
+            
+            // Brief scale-up for lift feedback
+            UIView.animate(withDuration: 0.15, delay: 0, usingSpringWithDamping: 0.7, initialSpringVelocity: 0.5) {
+                self.containerView.transform = CGAffineTransform(scaleX: 1.05, y: 1.05)
+            } completion: { _ in
+                UIView.animate(withDuration: 0.1) {
+                    self.containerView.transform = .identity
+                }
+            }
+            
             delegate?.treeCard(self, didBeginDragWith: gesture)
             
             // Haptic

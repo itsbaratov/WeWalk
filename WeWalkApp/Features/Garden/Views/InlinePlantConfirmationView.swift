@@ -18,14 +18,23 @@ final class InlinePlantConfirmationView: UIView {
     
     weak var delegate: InlinePlantConfirmationDelegate?
     
-    private let containerView: UIView = {
+    private let shadowContainer: UIView = {
         let view = UIView()
-        view.backgroundColor = .white
-        view.layer.cornerRadius = 12
         view.layer.shadowColor = UIColor.black.cgColor
-        view.layer.shadowOffset = CGSize(width: 0, height: 4)
-        view.layer.shadowRadius = 12
-        view.layer.shadowOpacity = 0.2
+        view.layer.shadowOffset = CGSize(width: 0, height: 8)
+        view.layer.shadowRadius = 16
+        view.layer.shadowOpacity = 0.15
+        view.translatesAutoresizingMaskIntoConstraints = false
+        return view
+    }()
+
+    private let containerView: UIVisualEffectView = {
+        let effect = UIBlurEffect(style: .systemUltraThinMaterial)
+        let view = UIVisualEffectView(effect: effect)
+        view.layer.cornerRadius = 24
+        view.clipsToBounds = true
+        view.layer.borderWidth = 1
+        view.layer.borderColor = UIColor.white.withAlphaComponent(0.3).cgColor
         view.translatesAutoresizingMaskIntoConstraints = false
         return view
     }()
@@ -33,7 +42,7 @@ final class InlinePlantConfirmationView: UIView {
     private let stackView: UIStackView = {
         let stack = UIStackView()
         stack.axis = .horizontal
-        stack.spacing = 8
+        stack.spacing = 16
         stack.alignment = .center
         stack.translatesAutoresizingMaskIntoConstraints = false
         return stack
@@ -41,7 +50,8 @@ final class InlinePlantConfirmationView: UIView {
     
     private let confirmButton: UIButton = {
         let button = UIButton(type: .system)
-        button.setImage(UIImage(systemName: "checkmark.circle.fill"), for: .normal)
+        let config = UIImage.SymbolConfiguration(pointSize: 24, weight: .semibold)
+        button.setImage(UIImage(systemName: "checkmark.circle.fill", withConfiguration: config), for: .normal)
         button.tintColor = .appStatusSuccess
         button.translatesAutoresizingMaskIntoConstraints = false
         return button
@@ -49,19 +59,11 @@ final class InlinePlantConfirmationView: UIView {
     
     private let cancelButton: UIButton = {
         let button = UIButton(type: .system)
-        button.setImage(UIImage(systemName: "xmark.circle.fill"), for: .normal)
+        let config = UIImage.SymbolConfiguration(pointSize: 24, weight: .semibold)
+        button.setImage(UIImage(systemName: "xmark.circle.fill", withConfiguration: config), for: .normal)
         button.tintColor = .systemGray
         button.translatesAutoresizingMaskIntoConstraints = false
         return button
-    }()
-    
-    private let titleLabel: UILabel = {
-        let label = UILabel()
-        label.text = "Plant here?"
-        label.font = .appCaption
-        label.textColor = .appTextOnLight
-        label.translatesAutoresizingMaskIntoConstraints = false
-        return label
     }()
     
     // MARK: - Init
@@ -79,31 +81,44 @@ final class InlinePlantConfirmationView: UIView {
     // MARK: - Setup
     
     private func setupView() {
-        addSubview(containerView)
-        containerView.addSubview(titleLabel)
-        containerView.addSubview(stackView)
+        addSubview(shadowContainer)
+        shadowContainer.addSubview(containerView)
         
-        stackView.addArrangedSubview(confirmButton)
+        containerView.contentView.addSubview(stackView)
+        
         stackView.addArrangedSubview(cancelButton)
         
+        // Add a small divider
+        let divider = UIView()
+        divider.backgroundColor = UIColor.systemGray.withAlphaComponent(0.3)
+        divider.translatesAutoresizingMaskIntoConstraints = false
+        stackView.addArrangedSubview(divider)
+        
+        stackView.addArrangedSubview(confirmButton)
+        
         NSLayoutConstraint.activate([
-            containerView.topAnchor.constraint(equalTo: topAnchor),
-            containerView.leadingAnchor.constraint(equalTo: leadingAnchor),
-            containerView.trailingAnchor.constraint(equalTo: trailingAnchor),
-            containerView.bottomAnchor.constraint(equalTo: bottomAnchor),
+            shadowContainer.topAnchor.constraint(equalTo: topAnchor),
+            shadowContainer.leadingAnchor.constraint(equalTo: leadingAnchor),
+            shadowContainer.trailingAnchor.constraint(equalTo: trailingAnchor),
+            shadowContainer.bottomAnchor.constraint(equalTo: bottomAnchor),
             
-            titleLabel.topAnchor.constraint(equalTo: containerView.topAnchor, constant: 8),
-            titleLabel.centerXAnchor.constraint(equalTo: containerView.centerXAnchor),
+            containerView.topAnchor.constraint(equalTo: shadowContainer.topAnchor),
+            containerView.leadingAnchor.constraint(equalTo: shadowContainer.leadingAnchor),
+            containerView.trailingAnchor.constraint(equalTo: shadowContainer.trailingAnchor),
+            containerView.bottomAnchor.constraint(equalTo: shadowContainer.bottomAnchor),
             
-            stackView.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 4),
-            stackView.centerXAnchor.constraint(equalTo: containerView.centerXAnchor),
+            stackView.topAnchor.constraint(equalTo: containerView.topAnchor, constant: 8),
             stackView.bottomAnchor.constraint(equalTo: containerView.bottomAnchor, constant: -8),
+            stackView.centerXAnchor.constraint(equalTo: containerView.centerXAnchor),
             
-            confirmButton.widthAnchor.constraint(equalToConstant: 36),
-            confirmButton.heightAnchor.constraint(equalToConstant: 36),
+            divider.widthAnchor.constraint(equalToConstant: 1),
+            divider.heightAnchor.constraint(equalToConstant: 24),
             
-            cancelButton.widthAnchor.constraint(equalToConstant: 36),
-            cancelButton.heightAnchor.constraint(equalToConstant: 36)
+            confirmButton.widthAnchor.constraint(equalToConstant: 44),
+            confirmButton.heightAnchor.constraint(equalToConstant: 44),
+            
+            cancelButton.widthAnchor.constraint(equalToConstant: 44),
+            cancelButton.heightAnchor.constraint(equalToConstant: 44)
         ])
         
         confirmButton.addTarget(self, action: #selector(confirmTapped), for: .touchUpInside)
@@ -160,6 +175,6 @@ final class InlinePlantConfirmationView: UIView {
     // MARK: - Sizing
     
     override var intrinsicContentSize: CGSize {
-        return CGSize(width: 100, height: 70)
+        return CGSize(width: 140, height: 60)
     }
 }

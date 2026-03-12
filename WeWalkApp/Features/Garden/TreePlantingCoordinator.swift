@@ -20,7 +20,7 @@ final class TreePlantingCoordinator: NSObject {
     
     private weak var containerView: UIView?
     private weak var canvasView: GardenCanvasView?
-    private weak var scrollView: UIScrollView?
+    // private weak var scrollView: UIScrollView? // Removed
     
     private var dragPreview: UIImageView?
     private var currentTreeData: ReadyTreeData?
@@ -33,10 +33,9 @@ final class TreePlantingCoordinator: NSObject {
     
     // MARK: - Init
     
-    init(containerView: UIView, canvasView: GardenCanvasView, scrollView: UIScrollView, grid: GardenGrid) {
+    init(containerView: UIView, canvasView: GardenCanvasView, grid: GardenGrid) {
         self.containerView = containerView
         self.canvasView = canvasView
-        self.scrollView = scrollView
         self.gardenGrid = grid
         super.init()
     }
@@ -67,33 +66,29 @@ final class TreePlantingCoordinator: NSObject {
         UIView.animate(withDuration: 0.2, delay: 0, usingSpringWithDamping: 0.6, initialSpringVelocity: 0.8) {
             preview.transform = CGAffineTransform(scaleX: 1.2, y: 1.2)
         }
+        
+        // The slots are now persistently shown, so we don't need to call showAvailableSlots anymore.
     }
     
     func handleDragMoved(gesture: UIPanGestureRecognizer) {
         guard let containerView = containerView,
               let preview = dragPreview,
-              let canvasView = canvasView,
-              let scrollView = scrollView else { return }
+              let canvasView = canvasView else { return }
         
         // Move preview with finger
         let location = gesture.location(in: containerView)
         preview.center = location
         
         // Convert to canvas coordinates
-        let scrollLocation = gesture.location(in: scrollView)
-        let canvasLocation = CGPoint(
-            x: (scrollLocation.x + scrollView.contentOffset.x) / scrollView.zoomScale,
-            y: (scrollLocation.y + scrollView.contentOffset.y) / scrollView.zoomScale
-        )
+        let canvasLocation = containerView.convert(location, to: canvasView)
         
-        // Check if we're over the canvas and find nearest slot
-        if canvasView.isWithinGrassArea(canvasLocation) {
-            if let nearestSlot = gardenGrid.nearestAvailableSlot(to: canvasLocation) {
-                canvasView.showHighlight(at: nearestSlot)
-                currentSlot = nearestSlot
-            }
+        // Precise hit test: only highlight when directly over a slot's diamond shape
+        if let hitSlot = canvasView.slotAt(canvasPoint: canvasLocation),
+           !hitSlot.isOccupied {
+            canvasView.highlightActiveSlot(hitSlot)
+            currentSlot = hitSlot
         } else {
-            canvasView.hideHighlight()
+            canvasView.hideActiveSlotRevertingState()
             currentSlot = nil
         }
     }
@@ -104,8 +99,8 @@ final class TreePlantingCoordinator: NSObject {
             return
         }
         
-        // Hide highlight
-        canvasView.hideHighlight()
+        // Let the highlighted slot revert to its normal state when dropped
+        canvasView.hideActiveSlotRevertingState()
         
         // Check if we have a valid drop slot
         if let slot = currentSlot, let treeData = currentTreeData {
@@ -118,19 +113,30 @@ final class TreePlantingCoordinator: NSObject {
     
     // MARK: - Confirmation Flow
     
+    /// Triggered by a direct tap on an empty grid slot
+    func showConfirmationForTap(at slot: PlacementSlot, for treeData: ReadyTreeData) {
+        currentSlot = slot
+        currentTreeData = treeData
+        
+        // No drag preview to animate, so just show the confirmation
+        // and add the temporary view
+        guard let containerView = containerView,
+              let canvasView = canvasView else { return }
+              
+        let slotPositionInCanvas = slot.position
+        let slotPositionInContainer = canvasView.convert(slotPositionInCanvas, to: containerView)
+        
+        showConfirmationView(at: slot, slotPositionInContainer: slotPositionInContainer, for: treeData)
+    }
+    
     private func showConfirmation(at slot: PlacementSlot, for treeData: ReadyTreeData) {
         guard let containerView = containerView,
               let canvasView = canvasView,
-              let scrollView = scrollView,
               let preview = dragPreview else { return }
         
         // Calculate screen position for the slot
         let slotPositionInCanvas = slot.position
-        let slotPositionInScrollView = CGPoint(
-            x: slotPositionInCanvas.x * scrollView.zoomScale - scrollView.contentOffset.x,
-            y: slotPositionInCanvas.y * scrollView.zoomScale - scrollView.contentOffset.y
-        )
-        let slotPositionInContainer = scrollView.convert(slotPositionInScrollView, to: containerView)
+        let slotPositionInContainer = canvasView.convert(slotPositionInCanvas, to: containerView)
         
         // Animate preview to slot position
         UIView.animate(withDuration: 0.3, delay: 0, usingSpringWithDamping: 0.7, initialSpringVelocity: 0.5) {
@@ -138,13 +144,26 @@ final class TreePlantingCoordinator: NSObject {
             preview.transform = .identity
         }
         
+        showConfirmationView(at: slot, slotPositionInContainer: slotPositionInContainer, for: treeData)
+        
+        // Hide the drag preview (we have the temp tree now)
+        UIView.animate(withDuration: 0.2) {
+            preview.alpha = 0
+        }
+    }
+    
+    private func showConfirmationView(at slot: PlacementSlot, slotPositionInContainer: CGPoint, for treeData: ReadyTreeData) {
+        guard let containerView = containerView,
+              let canvasView = canvasView else { return }
+        
+        
         // Create temporary tree on canvas (for visual feedback)
         if let image = treeData.treeType?.image(for: .adult) {
             let tempTree = UIImageView(image: image)
             tempTree.contentMode = .scaleAspectFit
             tempTree.frame = CGRect(
                 x: slot.position.x - AppConstants.Garden.treeSize / 2,
-                y: slot.position.y - AppConstants.Garden.treeSize,
+                y: slot.position.y - AppConstants.Garden.treeSize + 15,
                 width: AppConstants.Garden.treeSize,
                 height: AppConstants.Garden.treeSize
             )
@@ -166,18 +185,13 @@ final class TreePlantingCoordinator: NSObject {
         NSLayoutConstraint.activate([
             confirmation.centerXAnchor.constraint(equalTo: containerView.leadingAnchor, constant: confirmX),
             confirmation.centerYAnchor.constraint(equalTo: containerView.topAnchor, constant: confirmY),
-            confirmation.widthAnchor.constraint(equalToConstant: 100),
-            confirmation.heightAnchor.constraint(equalToConstant: 70)
+            confirmation.widthAnchor.constraint(equalToConstant: 140),
+            confirmation.heightAnchor.constraint(equalToConstant: 56)
         ])
         
         containerView.layoutIfNeeded()
         confirmation.show()
         confirmationView = confirmation
-        
-        // Hide the drag preview (we have the temp tree now)
-        UIView.animate(withDuration: 0.2) {
-            preview.alpha = 0
-        }
     }
     
     // MARK: - Cleanup

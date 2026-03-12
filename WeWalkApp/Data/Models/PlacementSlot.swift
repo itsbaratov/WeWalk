@@ -23,9 +23,12 @@ struct PlacementSlot: Identifiable {
         let centerX = AppConstants.Garden.grassCenterX
         let startY = AppConstants.Garden.grassStartY
         
-        // Isometric grid formula: each row staggers horizontally
-        let x = centerX + CGFloat(col - 3) * tileWidth + CGFloat(row) * (tileWidth / 2)
-        let y = startY + CGFloat(row) * tileHeight
+        // Isometric grid formula: diamond shape
+        // x moves diagonally: (col - row)
+        // y moves diagonally: (col + row)
+        let x = centerX + CGFloat(col - row) * (tileWidth / 2)
+        let y = startY + CGFloat(col + row) * (tileHeight / 2)
+        
         return CGPoint(x: x, y: y)
     }
     
@@ -36,6 +39,17 @@ struct PlacementSlot: Identifiable {
         self.isOccupied = false
         self.plantedTreeId = nil
         self.treeTypeId = nil
+    }
+    
+    /// Check if a canvas point falls within this slot's isometric diamond bounds
+    func slotContains(point: CGPoint) -> Bool {
+        let tileW = AppConstants.Garden.tileWidth - AppConstants.Garden.slotPadding
+        let tileH = AppConstants.Garden.tileHeight - AppConstants.Garden.slotPadding
+        let center = position
+        // Isometric diamond test: |dx|/halfW + |dy|/halfH <= 1
+        let dx = abs(point.x - center.x)
+        let dy = abs(point.y - center.y)
+        return (dx / (tileW / 2) + dy / (tileH / 2)) <= 1.0
     }
 }
 

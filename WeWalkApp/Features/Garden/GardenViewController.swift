@@ -85,23 +85,15 @@ final class GardenViewController: UIViewController {
         return label
     }()
     
-    private let gardenScrollView: UIScrollView = {
-        let sv = UIScrollView()
-        sv.minimumZoomScale = AppConstants.Garden.minZoomScale
-        sv.maximumZoomScale = AppConstants.Garden.maxZoomScale
-        sv.showsHorizontalScrollIndicator = false
-        sv.showsVerticalScrollIndicator = false
-        sv.backgroundColor = .appPrimaryGreen
-        sv.translatesAutoresizingMaskIntoConstraints = false
-        return sv
-    }()
-    
-    private let gardenCanvasContainer: UIView = {
+    private let gardenContainerView: UIView = {
         let view = UIView()
-        view.backgroundColor = .clear
+        view.backgroundColor = .appPrimaryGreen
+        view.clipsToBounds = true
         view.translatesAutoresizingMaskIntoConstraints = false
         return view
     }()
+    
+
     
     private let gardenView: GardenCanvasView = {
         let view = GardenCanvasView()
@@ -124,8 +116,12 @@ final class GardenViewController: UIViewController {
     private let readyToPlantView: UIView = {
         let view = UIView()
         view.backgroundColor = .appCardBackground
-        view.layer.cornerRadius = 16
+        view.layer.cornerRadius = 20
         view.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
+        view.layer.shadowColor = UIColor.black.cgColor
+        view.layer.shadowOffset = CGSize(width: 0, height: -4)
+        view.layer.shadowRadius = 12
+        view.layer.shadowOpacity = 0.12
         view.translatesAutoresizingMaskIntoConstraints = false
         return view
     }()
@@ -191,6 +187,27 @@ final class GardenViewController: UIViewController {
         viewModel.checkForReadyTrees()
     }
     
+
+
+    
+    // MARK: - Layout
+    
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        scaleGardenCanvas()
+    }
+    
+    private func scaleGardenCanvas() {
+        guard gardenContainerView.bounds.width > 0 else { return }
+        
+        // Calculate scale to fit the 1024 canvas into the container width
+        let containerWidth = gardenContainerView.bounds.width
+        let scale = containerWidth / AppConstants.Garden.canvasSize
+        
+        // Apply scale transform
+        gardenView.transform = CGAffineTransform(scaleX: scale, y: scale)
+    }
+    
     // MARK: - Setup
     
     private func setupUI() {
@@ -209,13 +226,14 @@ final class GardenViewController: UIViewController {
         subtitleContainer.addSubview(countLabel)
         
         // Garden canvas
-        view.addSubview(gardenScrollView)
-        gardenScrollView.addSubview(gardenCanvasContainer)
-        gardenCanvasContainer.addSubview(gardenView)
-        gardenScrollView.delegate = self
+        view.addSubview(gardenContainerView)
+        gardenContainerView.addSubview(gardenView)
         
         // Archive button
         view.addSubview(archiveButton)
+        
+        // Add delegate
+        gardenView.delegate = self
         
         // Ready to plant tray
         view.addSubview(readyToPlantView)
@@ -265,22 +283,15 @@ final class GardenViewController: UIViewController {
             countLabel.centerYAnchor.constraint(equalTo: subtitleContainer.centerYAnchor),
             countLabel.trailingAnchor.constraint(equalTo: subtitleContainer.trailingAnchor, constant: -16),
             
-            // Garden scroll
-            gardenScrollView.topAnchor.constraint(equalTo: subtitleContainer.bottomAnchor),
-            gardenScrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            gardenScrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            gardenScrollView.bottomAnchor.constraint(equalTo: readyToPlantView.topAnchor),
+            // Garden container (fills available space with padding)
+            gardenContainerView.topAnchor.constraint(equalTo: subtitleContainer.bottomAnchor),
+            gardenContainerView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 12),
+            gardenContainerView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -12),
+            gardenContainerView.bottomAnchor.constraint(equalTo: readyToPlantView.topAnchor),
             
-            // Canvas container (for proper zoom centering)
-            gardenCanvasContainer.topAnchor.constraint(equalTo: gardenScrollView.topAnchor),
-            gardenCanvasContainer.leadingAnchor.constraint(equalTo: gardenScrollView.leadingAnchor),
-            gardenCanvasContainer.trailingAnchor.constraint(equalTo: gardenScrollView.trailingAnchor),
-            gardenCanvasContainer.bottomAnchor.constraint(equalTo: gardenScrollView.bottomAnchor),
-            gardenCanvasContainer.widthAnchor.constraint(equalToConstant: canvasSize),
-            gardenCanvasContainer.heightAnchor.constraint(equalToConstant: canvasSize),
-            
-            gardenView.centerXAnchor.constraint(equalTo: gardenCanvasContainer.centerXAnchor),
-            gardenView.centerYAnchor.constraint(equalTo: gardenCanvasContainer.centerYAnchor),
+            // Garden Canvas (centered and fixed size, scaled down in layout)
+            gardenView.centerXAnchor.constraint(equalTo: gardenContainerView.centerXAnchor),
+            gardenView.centerYAnchor.constraint(equalTo: gardenContainerView.centerYAnchor),
             gardenView.widthAnchor.constraint(equalToConstant: canvasSize),
             gardenView.heightAnchor.constraint(equalToConstant: canvasSize),
             
@@ -347,6 +358,7 @@ final class GardenViewController: UIViewController {
         viewModel.$gardenGrid
             .receive(on: DispatchQueue.main)
             .sink { [weak self] grid in
+                self?.gardenView.setupGridStyles(grid: grid)
                 self?.plantingCoordinator?.updateGrid(grid)
             }
             .store(in: &cancellables)
@@ -361,7 +373,6 @@ final class GardenViewController: UIViewController {
         plantingCoordinator = TreePlantingCoordinator(
             containerView: view,
             canvasView: gardenView,
-            scrollView: gardenScrollView,
             grid: viewModel.getGrid()
         )
         plantingCoordinator?.delegate = self
@@ -410,13 +421,7 @@ final class GardenViewController: UIViewController {
     }
 }
 
-// MARK: - UIScrollViewDelegate
 
-extension GardenViewController: UIScrollViewDelegate {
-    func viewForZooming(in scrollView: UIScrollView) -> UIView? {
-        return gardenCanvasContainer
-    }
-}
 
 // MARK: - DraggableTreeCardDelegate
 
@@ -449,5 +454,17 @@ extension GardenViewController: TreePlantingCoordinatorDelegate {
     
     func coordinatorDidCancelPlanting() {
         // Tree returns to tray, nothing to do
+    }
+}
+
+// MARK: - GardenCanvasViewDelegate
+
+extension GardenViewController: GardenCanvasViewDelegate {
+    func gardenCanvas(_ canvas: GardenCanvasView, didSelectSlot slot: PlacementSlot) {
+        // Tap-to-plant: Get the first available tree
+        guard let firstTree = viewModel.readyToPlantTrees.first else { return }
+        
+        // Bypass the drag coordinator and show confirmation directly
+        plantingCoordinator?.showConfirmationForTap(at: slot, for: firstTree)
     }
 }

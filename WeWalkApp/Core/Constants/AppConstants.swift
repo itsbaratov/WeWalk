@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import UIKit
 
 enum AppConstants {
     
@@ -37,31 +38,30 @@ enum AppConstants {
     // MARK: - Garden
     
     enum Garden {
-        /// Maximum trees in one garden
-        static let maxCapacity: Int = 30
+        /// Maximum trees in one garden (5x5 grid)
+        static let maxCapacity: Int = 25
         
-        /// Grid dimensions (6 columns × 5 rows = 30 slots)
+        /// Grid dimensions (5 columns × 5 rows = 25 slots)
         static let gridRows: Int = 5
-        static let gridCols: Int = 6
+        static let gridCols: Int = 5
         
         /// Isometric tile dimensions
-        static let tileWidth: CGFloat = 140
-        static let tileHeight: CGFloat = 70
+        static let tileWidth: CGFloat = 180
+        static let tileHeight: CGFloat = 90
         
         /// Canvas size (matches ground image)
         static let canvasSize: CGFloat = 1024
         
         /// Grass surface positioning
         static let grassCenterX: CGFloat = 512
-        static let grassStartY: CGFloat = 180
+        static let grassStartY: CGFloat = 370
         
-        /// Zoom levels
-        static let minZoomScale: CGFloat = 0.5
-        static let maxZoomScale: CGFloat = 2.0
-        static let defaultZoomScale: CGFloat = 1.0
+        /// Slot visual styling
+        static let slotCornerRadius: CGFloat = 14
+        static let slotPadding: CGFloat = 14
         
         /// Tree image size on canvas
-        static let treeSize: CGFloat = 80
+        static let treeSize: CGFloat = 140
     }
     
     // MARK: - Streak Badges
