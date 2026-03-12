@@ -13,6 +13,12 @@ protocol DraggableTreeCardDelegate: AnyObject {
     func treeCard(_ card: DraggableTreeCardView, didEndDragWith gesture: UIPanGestureRecognizer)
 }
 
+struct TreeDragPreviewDescriptor {
+    let image: UIImage
+    let size: CGSize
+    let baseAnchor: CGPoint
+}
+
 final class DraggableTreeCardView: UIView {
     
     // MARK: - Properties
@@ -157,9 +163,15 @@ final class DraggableTreeCardView: UIView {
     
     /// Create a floating preview image for dragging
     func createDragPreview() -> UIImageView {
-        let preview = UIImageView(image: treeImageView.image)
+        let descriptor = makeDragPreviewDescriptor()
+        let preview = UIImageView(image: descriptor?.image)
         preview.contentMode = .scaleAspectFit
-        preview.frame = CGRect(x: 0, y: 0, width: 80, height: 80)
+        preview.frame = CGRect(
+            x: 0,
+            y: 0,
+            width: descriptor?.size.width ?? AppConstants.Garden.dragPreviewSize,
+            height: descriptor?.size.height ?? AppConstants.Garden.dragPreviewSize
+        )
         
         // Add shadow for depth
         preview.layer.shadowColor = UIColor.black.cgColor
@@ -168,5 +180,20 @@ final class DraggableTreeCardView: UIView {
         preview.layer.shadowOpacity = 0.4
         
         return preview
+    }
+
+    func makeDragPreviewDescriptor() -> TreeDragPreviewDescriptor? {
+        guard let image = treeImageView.image else { return nil }
+
+        let size = CGSize(
+            width: AppConstants.Garden.dragPreviewSize,
+            height: AppConstants.Garden.dragPreviewSize
+        )
+        let baseAnchor = CGPoint(
+            x: size.width / 2,
+            y: size.height * AppConstants.Garden.dragPreviewBaseYOffsetRatio
+        )
+
+        return TreeDragPreviewDescriptor(image: image, size: size, baseAnchor: baseAnchor)
     }
 }

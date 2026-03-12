@@ -56,7 +56,6 @@ final class GardenViewModel: BaseViewModel {
                 plantedTrees.append(PlantedTreeData(
                     id: treeId,
                     treeTypeId: "oak",
-                    position: slot.position,
                     row: row,
                     col: col
                 ))
@@ -88,7 +87,6 @@ final class GardenViewModel: BaseViewModel {
         let plantedTree = PlantedTreeData(
             id: treeId,
             treeTypeId: treeTypeId,
-            position: slot.position,
             row: slot.row,
             col: slot.col
         )
@@ -135,7 +133,6 @@ final class GardenViewModel: BaseViewModel {
 struct PlantedTreeData: Identifiable {
     let id: UUID
     let treeTypeId: String
-    let position: CGPoint
     let row: Int
     let col: Int
 }

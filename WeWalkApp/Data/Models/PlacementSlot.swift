@@ -16,22 +16,6 @@ struct PlacementSlot: Identifiable {
     var plantedTreeId: UUID?
     var treeTypeId: String?
     
-    /// Position on canvas (calculated from grid coordinates)
-    var position: CGPoint {
-        let tileWidth = AppConstants.Garden.tileWidth
-        let tileHeight = AppConstants.Garden.tileHeight
-        let centerX = AppConstants.Garden.grassCenterX
-        let startY = AppConstants.Garden.grassStartY
-        
-        // Isometric grid formula: diamond shape
-        // x moves diagonally: (col - row)
-        // y moves diagonally: (col + row)
-        let x = centerX + CGFloat(col - row) * (tileWidth / 2)
-        let y = startY + CGFloat(col + row) * (tileHeight / 2)
-        
-        return CGPoint(x: x, y: y)
-    }
-    
     init(row: Int, col: Int) {
         self.id = UUID()
         self.row = row
@@ -39,17 +23,6 @@ struct PlacementSlot: Identifiable {
         self.isOccupied = false
         self.plantedTreeId = nil
         self.treeTypeId = nil
-    }
-    
-    /// Check if a canvas point falls within this slot's isometric diamond bounds
-    func slotContains(point: CGPoint) -> Bool {
-        let tileW = AppConstants.Garden.tileWidth - AppConstants.Garden.slotPadding
-        let tileH = AppConstants.Garden.tileHeight - AppConstants.Garden.slotPadding
-        let center = position
-        // Isometric diamond test: |dx|/halfW + |dy|/halfH <= 1
-        let dx = abs(point.x - center.x)
-        let dy = abs(point.y - center.y)
-        return (dx / (tileW / 2) + dy / (tileH / 2)) <= 1.0
     }
 }
 
@@ -81,18 +54,6 @@ struct GardenGrid {
     /// Get all available (unoccupied) slots
     var availableSlots: [PlacementSlot] {
         slots.flatMap { $0 }.filter { !$0.isOccupied }
-    }
-    
-    /// Find the nearest available slot to a given position
-    func nearestAvailableSlot(to position: CGPoint) -> PlacementSlot? {
-        let available = availableSlots
-        guard !available.isEmpty else { return nil }
-        
-        return available.min { slot1, slot2 in
-            let dist1 = hypot(slot1.position.x - position.x, slot1.position.y - position.y)
-            let dist2 = hypot(slot2.position.x - position.x, slot2.position.y - position.y)
-            return dist1 < dist2
-        }
     }
     
     /// Mark a slot as occupied

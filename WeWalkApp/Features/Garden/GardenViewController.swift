@@ -92,9 +92,6 @@ final class GardenViewController: UIViewController {
         view.translatesAutoresizingMaskIntoConstraints = false
         return view
     }()
-    
-
-    
     private let gardenView: GardenCanvasView = {
         let view = GardenCanvasView()
         view.translatesAutoresizingMaskIntoConstraints = false
@@ -187,27 +184,6 @@ final class GardenViewController: UIViewController {
         viewModel.checkForReadyTrees()
     }
     
-
-
-    
-    // MARK: - Layout
-    
-    override func viewDidLayoutSubviews() {
-        super.viewDidLayoutSubviews()
-        scaleGardenCanvas()
-    }
-    
-    private func scaleGardenCanvas() {
-        guard gardenContainerView.bounds.width > 0 else { return }
-        
-        // Calculate scale to fit the 1024 canvas into the container width
-        let containerWidth = gardenContainerView.bounds.width
-        let scale = containerWidth / AppConstants.Garden.canvasSize
-        
-        // Apply scale transform
-        gardenView.transform = CGAffineTransform(scaleX: scale, y: scale)
-    }
-    
     // MARK: - Setup
     
     private func setupUI() {
@@ -246,8 +222,6 @@ final class GardenViewController: UIViewController {
     }
     
     private func setupConstraints() {
-        let canvasSize = AppConstants.Garden.canvasSize
-        
         NSLayoutConstraint.activate([
             // Header
             headerView.topAnchor.constraint(equalTo: view.topAnchor),
@@ -289,11 +263,11 @@ final class GardenViewController: UIViewController {
             gardenContainerView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -12),
             gardenContainerView.bottomAnchor.constraint(equalTo: readyToPlantView.topAnchor),
             
-            // Garden Canvas (centered and fixed size, scaled down in layout)
-            gardenView.centerXAnchor.constraint(equalTo: gardenContainerView.centerXAnchor),
-            gardenView.centerYAnchor.constraint(equalTo: gardenContainerView.centerYAnchor),
-            gardenView.widthAnchor.constraint(equalToConstant: canvasSize),
-            gardenView.heightAnchor.constraint(equalToConstant: canvasSize),
+            // Garden Canvas
+            gardenView.topAnchor.constraint(equalTo: gardenContainerView.topAnchor),
+            gardenView.leadingAnchor.constraint(equalTo: gardenContainerView.leadingAnchor),
+            gardenView.trailingAnchor.constraint(equalTo: gardenContainerView.trailingAnchor),
+            gardenView.bottomAnchor.constraint(equalTo: gardenContainerView.bottomAnchor),
             
             // Archive button
             archiveButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
@@ -443,13 +417,7 @@ extension GardenViewController: DraggableTreeCardDelegate {
 
 extension GardenViewController: TreePlantingCoordinatorDelegate {
     func coordinatorDidConfirmPlanting(at slot: PlacementSlot, treeData: ReadyTreeData) {
-        // Add tree to the garden
         viewModel.plantTree(at: slot, treeData: treeData)
-        
-        // Add tree to canvas with animation
-        if let image = viewModel.getTreeImage(for: treeData.treeTypeId) {
-            gardenView.addTree(image: image, at: slot, treeId: UUID(), animated: true)
-        }
     }
     
     func coordinatorDidCancelPlanting() {

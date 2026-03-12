@@ -51,17 +51,34 @@ enum AppConstants {
         
         /// Canvas size (matches ground image)
         static let canvasSize: CGFloat = 1024
-        
-        /// Grass surface positioning
-        static let grassCenterX: CGFloat = 512
-        static let grassStartY: CGFloat = 370
-        
-        /// Slot visual styling
-        static let slotCornerRadius: CGFloat = 14
-        static let slotPadding: CGFloat = 14
-        
-        /// Tree image size on canvas
-        static let treeSize: CGFloat = 140
+
+        /// Calibrated top-surface anchors for `new_ground` (normalized to image rect).
+        static let surfaceTopVertexNormalized = CGPoint(x: 0.5, y: 0.0022)
+        static let surfaceRightVertexNormalized = CGPoint(x: 0.999, y: 0.468)
+        static let surfaceBottomVertexNormalized = CGPoint(x: 0.5, y: 0.9342)
+        static let surfaceLeftVertexNormalized = CGPoint(x: 0.001, y: 0.468)
+
+        /// Keeps all cells away from the four ground corners.
+        static let cornerSafeInsetRatio: CGFloat = 0.035
+
+        /// Slot tuning (visual cell < interaction cell).
+        static let slotCornerRadius: CGFloat = 8
+        static let slotVisualScale: CGFloat = 0.86
+        static let slotInteractionScale: CGFloat = 0.98
+        static let interactionExpansionRadius: CGFloat = 16
+        static let magneticSelectionRadiusRatio: CGFloat = 0.78
+        static let dragSelectionHysteresisRadius: CGFloat = 14
+
+        /// Planted tree sizing and anchor tuning.
+        static let treeScaleRatio: CGFloat = 0.66
+        static let treeMinSize: CGFloat = 70
+        static let treeMaxSize: CGFloat = 116
+        static let treeBaseAnchorRatio: CGFloat = 0.84
+
+        /// Drag preview tuning.
+        static let dragPreviewSize: CGFloat = 80
+        static let dragPreviewBaseYOffsetRatio: CGFloat = 0.84
+        static let dragFingerLift: CGFloat = 96
     }
     
     // MARK: - Streak Badges
